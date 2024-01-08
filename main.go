@@ -1,0 +1,153 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+func downloadFile(url string, saveAs string, saveDir string, rateLimit int64) error {
+	// Create the save directory if it doesn't exist
+	if saveDir != "" {
+		err := os.MkdirAll(saveDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Determine the filename
+	var filename string
+	if saveAs != "" {
+		filename = saveAs
+	} else {
+		filename = filepath.Base(url)
+	}
+
+	// Create the file to save
+	savePath := filepath.Join(saveDir, filename)
+	file, err := os.Create(savePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Make the HTTP request
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Get the content length
+	contentLength := resp.ContentLength
+
+	// Create the progress bar
+	fmt.Printf("Downloading %s...\n", filename)
+	bar := &progressBar{total: contentLength}
+	defer bar.finish()
+
+	// Create a multi-writer to write to file and update progress bar
+	writer := io.MultiWriter(file, bar)
+
+	// Wrap the writer with a rate limiter if rateLimit is specified
+	if rateLimit > 0 {
+		writer = NewRateLimitedWriter(writer, rateLimit)
+	}
+
+	// Copy the response body to file with progress update
+	startTime := time.Now()
+	_, err = io.Copy(writer, resp.Body)
+	if err != nil {
+		return err
+	}
+	elapsedTime := time.Since(startTime)
+
+	fmt.Printf("Downloaded %s in %s\n", filename, elapsedTime)
+
+	return nil
+}
+
+type progressBar struct {
+	total      int64
+	downloaded int64
+}
+
+func (p *progressBar) Write(b []byte) (int, error) {
+	n := len(b)
+	p.downloaded += int64(n)
+	p.printProgress()
+	return n, nil
+}
+
+func (p *progressBar) finish() {
+	p.downloaded = p.total
+	p.printProgress()
+	fmt.Println()
+}
+
+func (p *progressBar) printProgress() {
+	progress := float64(p.downloaded) / float64(p.total) * 100
+	fmt.Printf("\r%.2f%%", progress)
+}
+
+type rateLimitedWriter struct {
+	writer     io.Writer
+	limiter    <-chan time.Time
+	rate       int64
+	bytes      int64
+	lastUpdate time.Time
+}
+
+func NewRateLimitedWriter(writer io.Writer, rate int64) *rateLimitedWriter {
+	duration := time.Second / time.Duration(rate)
+	return &rateLimitedWriter{
+		writer:     writer,
+		limiter:    time.Tick(duration),
+		rate:       rate,
+		bytes:      0,
+		lastUpdate: time.Now(),
+	}
+}
+
+func (w *rateLimitedWriter) Write(p []byte) (n int, err error) {
+	<-w.limiter
+	n, err = w.writer.Write(p)
+	if n > 0 {
+		w.bytes += int64(n)
+		currTime := time.Now()
+		elapsed := currTime.Sub(w.lastUpdate).Seconds()
+		if elapsed >= 1.0 {
+			throughput := float64(w.bytes) / elapsed
+			w.lastUpdate = currTime
+			w.bytes = 0
+			fmt.Printf("Throughput: %.2f bytes/s\n", throughput)
+		}
+	}
+	return
+}
+
+func main() {
+	// Command-line flag variables
+	url := flag.String("url", "", "URL of the file to download")
+	saveAs := flag.String("O", "", "save the downloaded file with a different name")
+	saveDir := flag.String("P", "", "directory to save the downloaded file")
+	rateLimit := flag.Int64("rate-limit", 0, "limit the download speed in bytes per second")
+	flag.Parse()
+
+	if *url == "" {
+		fmt.Println("Please provide a URL")
+		return
+	}
+
+	err := downloadFile(*url, *saveAs, *saveDir, *rateLimit)
+	if err != nil {
+		fmt.Printf("Error downloading file: %v\n", err)
+		return
+	}
+
+	fmt.Println("Download completed successfully")
+}
