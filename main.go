@@ -71,11 +71,13 @@ func downloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 	return nil
 }
 
+// progressBar represents a basic progress bar for tracking download progress
 type progressBar struct {
 	total      int64
 	downloaded int64
 }
 
+// Write updates the progress bar when data is written
 func (p *progressBar) Write(b []byte) (int, error) {
 	n := len(b)
 	p.downloaded += int64(n)
@@ -83,17 +85,20 @@ func (p *progressBar) Write(b []byte) (int, error) {
 	return n, nil
 }
 
+// finish completes the progress bar when the download is finished
 func (p *progressBar) finish() {
 	p.downloaded = p.total
 	p.printProgress()
 	fmt.Println()
 }
 
+// printProgress prints the current progress of the download
 func (p *progressBar) printProgress() {
 	progress := float64(p.downloaded) / float64(p.total) * 100
 	fmt.Printf("\r%.2f%%", progress)
 }
 
+// rateLimitedWriter wraps an existing writer and limits the write speed
 type rateLimitedWriter struct {
 	writer     io.Writer
 	limiter    <-chan time.Time
@@ -102,6 +107,7 @@ type rateLimitedWriter struct {
 	lastUpdate time.Time
 }
 
+// NewRateLimitedWriter creates a new rateLimitedWriter with the specified writer and rate limit
 func NewRateLimitedWriter(writer io.Writer, rate int64) *rateLimitedWriter {
 	duration := time.Second / time.Duration(rate)
 	return &rateLimitedWriter{
@@ -113,6 +119,7 @@ func NewRateLimitedWriter(writer io.Writer, rate int64) *rateLimitedWriter {
 	}
 }
 
+// Write writes data to the writer with rate limiting and throughput monitoring
 func (w *rateLimitedWriter) Write(p []byte) (n int, err error) {
 	<-w.limiter
 	n, err = w.writer.Write(p)
@@ -131,7 +138,6 @@ func (w *rateLimitedWriter) Write(p []byte) (n int, err error) {
 }
 
 func main() {
-	// Command-line flag variables
 	url := flag.String("url", "", "URL of the file to download")
 	saveAs := flag.String("O", "", "save the downloaded file with a different name")
 	saveDir := flag.String("P", "", "directory to save the downloaded file")
