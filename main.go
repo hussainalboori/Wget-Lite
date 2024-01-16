@@ -138,18 +138,17 @@ func (w *rateLimitedWriter) Write(p []byte) (n int, err error) {
 }
 
 func main() {
-	url := flag.String("url", "", "URL of the file to download")
+	if len(os.Args) < 2 {
+		fmt.Println("usge go run main.go <url> -o <save as> -p <path to save> -rate-limit <rate limt>")
+		return
+	}
+	url := os.Args[1]
 	saveAs := flag.String("O", "", "save the downloaded file with a different name")
 	saveDir := flag.String("P", "", "directory to save the downloaded file")
 	rateLimit := flag.Int64("rate-limit", 0, "limit the download speed in bytes per second")
 	flag.Parse()
 
-	if *url == "" {
-		fmt.Println("Please provide a URL")
-		return
-	}
-
-	err := downloadFile(*url, *saveAs, *saveDir, *rateLimit)
+	err := downloadFile(url, *saveAs, *saveDir, *rateLimit)
 	if err != nil {
 		fmt.Printf("Error downloading file: %v\n", err)
 		return
