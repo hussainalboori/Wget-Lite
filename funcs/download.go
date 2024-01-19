@@ -2,20 +2,16 @@ package funcs
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 func DownloadFile(url string, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	startTime := time.Now()
-	fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
+	// startTime := time.Now()
+	// 	fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
 
 	// Make the HTTP request
 	response, err := http.Get(url)
@@ -47,31 +43,8 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 		os.Exit(1)
 	}
 	defer file.Close()
-	//////////////////////////////////////////////////////////////////////////////
-	contentSize := response.ContentLength
-	fmt.Printf("sending request, awaiting response... status %d OK\n", response.StatusCode)
-	fmt.Printf("content size: %d [~%.2fMB]\n", contentSize, float64(contentSize)/(1024*1024))
-	fmt.Printf("saving file to: %s\n", savePath)
 
-	//////////////////////////////////////////////////////////////////////////////
-
-	// Create a progress progress
-	progress := progressbar.DefaultBytes(
-		contentSize,
-		"[Downloading]...",
-	)
-
-	// Use a custom reader to update the progress
-	reader := &ProgressReader{Reader: response.Body, Progress: progress}
-	_, err = io.Copy(io.MultiWriter(file, progress), reader)
-	if err != nil {
-		return err
-	}
-
-	progress.Finish()
-	fmt.Printf("\nDownloaded [%s]\n", url)
-	fmt.Printf("finished at %s\n", time.Now().Format("2006-01-02 15:04:05"))
-
+	Output(response, file, savePath, url)
 	return nil
 }
 
