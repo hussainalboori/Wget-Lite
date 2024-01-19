@@ -31,7 +31,6 @@ func main() {
 			url = arg
 			// Increment the new wait group for each goroutine
 			wg.Add(1)
-			// go funcs.SendSingleRequest(currentArg, &wg)
 			// Call the downloadFile function with the parsed arguments
 			go func() {
 				err := funcs.DownloadFile(url, &wg)
@@ -53,7 +52,7 @@ func main() {
 	// Wait for all downloads to complete
 	wg.Wait()
 
-	fmt.Println("\nDownload completed successfully\n")
+	// fmt.Println("\nDownload completed successfully\n")
 
 	// Debugging prints
 	fmt.Println("<-------------------------------->")
