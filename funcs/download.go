@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
 
-var startTime time.Time
-
-func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) error {
+func DownloadFile(url string, wg *sync.WaitGroup) error {
+	defer wg.Done()
 	startTime := time.Now()
 	fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
 
@@ -31,8 +31,8 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 	}
 
 	// Create the save directory if it doesn't exist
-	if saveDir != "" {
-		err := os.MkdirAll(saveDir, 0755)
+	if *SaveDir != "" {
+		err := os.MkdirAll(*SaveDir, 0755)
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 
 	filename := filepath.Base(url)
 
-	savePath := getUniqueFileName(filename, saveDir, saveAs)
+	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs)
 	file, err := os.Create(savePath)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
@@ -58,7 +58,7 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 	// Create a progress progress
 	progress := progressbar.DefaultBytes(
 		contentSize,
-		"[downloading]",
+		"[Downloading]...",
 	)
 
 	// Use a custom reader to update the progress
@@ -75,8 +75,8 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 	return nil
 }
 
-// // rateLimitedWriter wraps an existing writer and limits the write speed
-// type rateLimitedWriter struct {
+// // RateLimitedWriter wraps an existing writer and limits the write speed
+// type RateLimitedWriter struct {
 // 	writer     io.Writer
 // 	limiter    <-chan time.Time
 // 	rate       int64
@@ -84,10 +84,10 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 // 	lastUpdate time.Time
 // }
 
-// // NewRateLimitedWriter creates a new rateLimitedWriter with the specified writer and rate limit
-// func NewRateLimitedWriter(writer io.Writer, rate int64) *rateLimitedWriter {
+// // NewRateLimitedWriter creates a new RateLimitedWriter with the specified writer and rate limit
+// func NewRateLimitedWriter(writer io.Writer, rate int64) *RateLimitedWriter {
 // 	duration := time.Second / time.Duration(rate)
-// 	return &rateLimitedWriter{
+// 	return &RateLimitedWriter{
 // 		writer:     writer,
 // 		limiter:    time.Tick(duration),
 // 		rate:       rate,
@@ -97,7 +97,7 @@ func DownloadFile(url string, saveAs string, saveDir string, rateLimit int64) er
 // }
 
 // // Write writes data to the writer with rate limiting and throughput monitoring
-// func (w *rateLimitedWriter) Write(p []byte) (n int, err error) {
+// func (w *RateLimitedWriter) Write(p []byte) (n int, err error) {
 // 	<-w.limiter
 // 	n, err = w.writer.Write(p)
 // 	if n > 0 {

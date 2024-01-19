@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-func getUniqueFileName(fileName string, path string, saveAs string) string {
+func getUniqueFileName(fileName string, path string, SaveAs string) string {
 
 	ext := getFileExtension(fileName)
 	baseName := strings.TrimSuffix(fileName, ext)
 	// Determine the filename
-	if saveAs != "" {
-		baseName = saveAs
+	if SaveAs != "" {
+		baseName = SaveAs
 	}
 	newFileName := fmt.Sprintf("%s%s", baseName, ext)
 	fullPath := filepath.Join(path, newFileName)

@@ -2,15 +2,10 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"wget/funcs"
 
 	"github.com/spf13/pflag"
-)
-
-var (
-	saveAs    = pflag.StringP("O", "O", "", "save the downloaded file with a different name")
-	saveDir   = pflag.StringP("P", "P", "", "directory to save the downloaded file")
-	rateLimit = pflag.Int64P("rate-limit", "R", 0, "limit the download speed in bytes per second")
 )
 
 func main() {
@@ -24,20 +19,48 @@ func main() {
 		return
 	}
 
-	url := args[0]
+	url := ""
 
-	// Debugging prints
-	fmt.Println("URL:", url)
-	fmt.Println("flagO:", *saveAs)
-	fmt.Println("flagP:", *saveDir)
-	fmt.Println("flagRateLimit:", *rateLimit)
+	// Use a separate wait group for the goroutines
+	var wg sync.WaitGroup
 
-	// Call the downloadFile function with the parsed arguments
-	err := funcs.DownloadFile(url, *saveAs, *saveDir, *rateLimit)
-	if err != nil {
-		fmt.Printf("Error downloading file: %v\n", err)
-		return
+	if *funcs.InputFile != "" {
+		funcs.MultiDownloads()
+	} else {
+		for _, arg := range args {
+			url = arg
+			// Increment the new wait group for each goroutine
+			wg.Add(1)
+			// go funcs.SendSingleRequest(currentArg, &wg)
+			// Call the downloadFile function with the parsed arguments
+			go func() {
+				err := funcs.DownloadFile(url, &wg)
+				if err != nil {
+					fmt.Printf("Error downloading file: %v\n", err)
+					return
+				}
+			}()
+
+		}
 	}
+	// // Call the downloadFile function with the parsed arguments
+	// err := funcs.DownloadFile(url)
+	// if err != nil {
+	// 	fmt.Printf("Error downloading file: %v\n", err)
+	// 	return
+	// }
+
+	// Wait for all downloads to complete
+	wg.Wait()
 
 	fmt.Println("\nDownload completed successfully\n")
+
+	// Debugging prints
+	fmt.Println("<-------------------------------->")
+	fmt.Println("URL:", url)
+	fmt.Println("flagO:", *funcs.SaveAs)
+	fmt.Println("flagP:", *funcs.SaveDir)
+	fmt.Println("flagRateLimit:", *funcs.RateLimit)
+	fmt.Println("<-------------------------------->\n")
+
 }
