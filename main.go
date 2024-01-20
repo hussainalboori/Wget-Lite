@@ -35,11 +35,13 @@ func main() {
 					return
 				}
 			}()
+			wg.Wait()
+
 		}
 	}
 
-	// Wait for all downloads to complete
-	wg.Wait()
+	// // Wait for all downloads to complete
+	// wg.Wait()
 
 	// fmt.Println("\nDownload completed successfully\n")
 

@@ -39,12 +39,12 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 	defer response.Body.Close()
 
 	// if response.StatusCode != http.StatusOK {
-	// 	fmt.Printf("Error2: HTTP status code %d\n", response.StatusCode)
+	// 	fmt.Printf("\nError2: HTTP status code %d\n", response.StatusCode)
 	// 	os.Exit(1)
 	// }
 
-
 	Output(response, file, savePath, url)
+
 	return nil
 }
 
