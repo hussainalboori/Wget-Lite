@@ -14,10 +14,10 @@ func main() {
 
 	// Retrieve non-flag arguments
 	args := pflag.Args()
-	if len(args) < 1 {
-		fmt.Println("Error: URL is required")
-		return
-	}
+	// if len(args) < 1 {
+	// 	fmt.Println("Error: URL is required")
+	// 	return
+	// }
 
 	url := ""
 
