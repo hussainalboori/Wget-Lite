@@ -46,9 +46,13 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 		}
 	}
 
+	// Determine the file extension
+	contentType := response.Header.Get("Content-Type")
+	fileExtension := getFileExtension(contentType, url)
+
 	filename := filepath.Base(url)
 
-	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs)
+	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs , fileExtension)
 	file, err := os.Create(savePath)
 	if err != nil {
 		fmt.Println("Error creating file:", err)

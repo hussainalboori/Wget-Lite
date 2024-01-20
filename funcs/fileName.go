@@ -2,14 +2,14 @@ package funcs
 
 import (
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func getUniqueFileName(fileName string, path string, SaveAs string) string {
+func getUniqueFileName(fileName, path, SaveAs, ext string) string {
 
-	ext := getFileExtension(fileName)
 	baseName := strings.TrimSuffix(fileName, ext)
 	// Determine the filename
 	if SaveAs != "" {
@@ -38,10 +38,20 @@ func getUniqueFileName(fileName string, path string, SaveAs string) string {
 	return fullPath
 }
 
-func getFileExtension(fileName string) string {
-	dotIndex := strings.LastIndex(fileName, ".")
-	if dotIndex == -1 {
-		return ""
+// getFileExtension returns the file extension based on the Content-Type header or URL file extension
+func getFileExtension(contentType, urlPath string) string {
+	// Try to extract the file extension from the Content-Type header
+	ext, _ := mime.ExtensionsByType(contentType)
+	if len(ext) > 0 {
+		return ext[0]
 	}
-	return fileName[dotIndex:]
+
+	// If the Content-Type header doesn't provide a file extension, try to extract it from the URL
+	urlExt := filepath.Ext(urlPath)
+	if urlExt != "" {
+		return urlExt
+	}
+
+	// Default to no extension or determine based on other criteria
+	return ""
 }
