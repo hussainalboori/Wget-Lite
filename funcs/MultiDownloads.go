@@ -2,9 +2,11 @@ package funcs
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 func MultiDownloads() {
@@ -31,4 +33,10 @@ func MultiDownloads() {
 		go DownloadFile(url, &wg)
 	}
 	wg.Wait()
+
+	if *InputFile != "" {
+		// Log the download completion
+		fmt.Printf("\nDownloaded [%d] files\n", len(urlArray))
+		fmt.Printf("finished at %s\n", time.Now().Format("2006-01-02 15:04:05"))
+	}
 }
