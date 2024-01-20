@@ -10,21 +10,6 @@ import (
 
 func DownloadFile(url string, wg *sync.WaitGroup) error {
 	defer wg.Done()
-	// startTime := time.Now()
-	// 	fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
-
-	// Make the HTTP request
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		fmt.Printf("Error: HTTP status code %d\n", response.StatusCode)
-		os.Exit(1)
-	}
 
 	// Create the save directory if it doesn't exist
 	if *SaveDir != "" {
@@ -43,6 +28,21 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 		os.Exit(1)
 	}
 	defer file.Close()
+
+	// Make the HTTP request
+	response, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error1:", err)
+
+		os.Exit(1)
+	}
+	defer response.Body.Close()
+
+	// if response.StatusCode != http.StatusOK {
+	// 	fmt.Printf("Error2: HTTP status code %d\n", response.StatusCode)
+	// 	os.Exit(1)
+	// }
+
 
 	Output(response, file, savePath, url)
 	return nil

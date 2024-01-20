@@ -14,10 +14,6 @@ func main() {
 
 	// Retrieve non-flag arguments
 	args := pflag.Args()
-	// if len(args) < 1 {
-	// 	fmt.Println("Error: URL is required")
-	// 	return
-	// }
 
 	url := ""
 
@@ -39,27 +35,20 @@ func main() {
 					return
 				}
 			}()
-
 		}
 	}
-	// // Call the downloadFile function with the parsed arguments
-	// err := funcs.DownloadFile(url)
-	// if err != nil {
-	// 	fmt.Printf("Error downloading file: %v\n", err)
-	// 	return
-	// }
 
 	// Wait for all downloads to complete
 	wg.Wait()
 
 	// fmt.Println("\nDownload completed successfully\n")
 
-	// Debugging prints
-	fmt.Println("<-------------------------------->")
-	fmt.Println("URL:", url)
-	fmt.Println("flagO:", *funcs.SaveAs)
-	fmt.Println("flagP:", *funcs.SaveDir)
-	fmt.Println("flagRateLimit:", *funcs.RateLimit)
-	fmt.Println("<-------------------------------->\n")
+	// // Debugging prints
+	// fmt.Println("<-------------------------------->")
+	// fmt.Println("URL:", url)
+	// fmt.Println("flagO:", *funcs.SaveAs)
+	// fmt.Println("flagP:", *funcs.SaveDir)
+	// fmt.Println("flagRateLimit:", *funcs.RateLimit)
+	// fmt.Println("<-------------------------------->\n")
 
 }
