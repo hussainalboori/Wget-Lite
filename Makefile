@@ -5,4 +5,4 @@ compilerun:
 clean:
 	rm -rf wget
 	rm -rf *.jpg
-	rm -rf Log.txt
+	rm -rf Wget-light-log.txt

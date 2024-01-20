@@ -61,7 +61,7 @@ This Go code provides a command-line tool to download a file from a given URL. I
 
 ## Implemented Options
 
-1. `-B` : Enables Silent Mode. All output will be written to a file called `Log.txt`.
+1. `-B` : Enables Silent Mode. All output will be written to a file called `Wget-light-log.txt`.
 2. `-O` and `-P` : rename the file under a different name and under a different path respectively.
 3. The project implements a rate limiter (still in works). Basically the program can control the speed of the download by using the flag `--rate-limit`. If you download a huge file you can limit the speed of your download, preventing the program from using the full possible bandwidth of your connection.
 4. Downloading different files is possible. For this the program will receive the `-i` flag followed by a file name that will contain all links that are to be downloaded. The downloads will be done in async.

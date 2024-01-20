@@ -17,10 +17,10 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 	contentSize := response.ContentLength
 
 	if *SilentMode {
-		fmt.Println("Logs will be written to Log.txt")
+		fmt.Println("Logs will be written to Wget-light-log.txt")
 
 		// Open or create a log file
-		logFile, err := os.Create("Log.txt")
+		logFile, err := os.Create("Wget-light-log.txt")
 		if err != nil {
 			return err
 		}
@@ -46,18 +46,18 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 		log.Printf("Downloaded [%s]", url)
 		log.Printf("Finished at %s", time.Now().Format("2006-01-02 15:04:05"))
 	} else {
-		// Create a progress progress
-		progress := progressbar.DefaultBytes(
-			contentSize,
-			"[Downloading]...",
-		)
+
 		//////////////////////////////////////////////////////////////////////////////
 		fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
 		fmt.Printf("sending request, awaiting response... status %d OK\n", response.StatusCode)
 		fmt.Printf("content size: %d [~%.2fMB]\n", contentSize, float64(contentSize)/(1024*1024))
 		fmt.Printf("saving file to: %s\n", savePath)
 		//////////////////////////////////////////////////////////////////////////////
-
+		// Create a progress progress
+		progress := progressbar.DefaultBytes(
+			contentSize,
+			"[Downloading]...",
+		)
 		// Use a custom reader to update the progress
 		reader := &ProgressReader{Reader: response.Body, Progress: progress}
 		_, err := io.Copy(io.MultiWriter(file, progress), reader)
