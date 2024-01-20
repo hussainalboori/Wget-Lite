@@ -16,17 +16,6 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 
 	contentSize := response.ContentLength
 
-	var responseMessage string
-
-	switch response.StatusCode {
-	case http.StatusOK:
-		responseMessage = "Status 200 OK."
-	case http.StatusForbidden:
-		responseMessage = "Access denied. Status 403 Forbidden."
-	default:
-		responseMessage = fmt.Sprintf("Unexpected status code: %d %s", response.StatusCode, http.StatusText(response.StatusCode))
-	}
-
 	if *SilentMode {
 		fmt.Println("Logs will be written to Wget-light-log.txt")
 
@@ -42,8 +31,8 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 
 		// Log the output
 		log.Printf("start at %s", startTime.Format("2006-01-02 15:04:05"))
-		log.Printf("Sending request, awaiting response... %s", responseMessage)
-		log.Printf("Content size: %d [~%.2fMB]", response.ContentLength, float64(response.ContentLength)/(1024*1024))
+		log.Printf("Sending request, awaiting response... %s", responseStatus(response))
+		log.Printf("Content size: %d [~%.2fMB]", contentSize, float64(contentSize)/(1024*1024))
 		log.Printf("Saving file to: %s", savePath)
 
 		// Use a custom reader to update the progress
@@ -52,14 +41,15 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 		if err != nil {
 			return err
 		}
-
-		// Log the download completion
-		log.Printf("Downloaded [%s]", url)
-		log.Print("Finished at ", time.Now().Format("2006-01-02 15:04:05"), "\n\n")
+		if *InputFile == "" {
+			// Log the download completion
+			log.Printf("Downloaded [%s]", url)
+			log.Print("Finished at ", time.Now().Format("2006-01-02 15:04:05"), "\n\n")
+		}
 	} else {
 
 		fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
-		fmt.Printf("sending request, awaiting response... %s\n", responseMessage)
+		fmt.Printf("sending request, awaiting response... %s\n", responseStatus(response))
 		fmt.Printf("content size: %d [~%.2fMB]\n", contentSize, float64(contentSize)/(1024*1024))
 		fmt.Printf("saving file to: %s\n", savePath)
 
@@ -76,9 +66,24 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 		}
 
 		progress.Finish()
-		fmt.Printf("\nDownloaded [%s]\n", url)
-		fmt.Printf("finished at %s\n", time.Now().Format("2006-01-02 15:04:05"))
+		if *InputFile == "" {
+			// Log the download completion
+			fmt.Printf("\nDownloaded [%s]\n", url)
+			fmt.Printf("finished at %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
+		}
 	}
 
 	return nil
+}
+
+// ResponseStatus returns the formatted status message
+func responseStatus(response *http.Response) string {
+	switch response.StatusCode {
+	case http.StatusOK:
+		return "Status 200 OK."
+	case http.StatusForbidden:
+		return "Access denied. Status 403 Forbidden."
+	default:
+		return fmt.Sprintf("Unexpected status code: %d %s", response.StatusCode, http.StatusText(response.StatusCode))
+	}
 }
