@@ -57,10 +57,16 @@ type RateLimitedWriter struct {
 func NewRateLimitedWriter(writer io.Writer, rate int64) *RateLimitedWriter {
 	duration := time.Second / time.Duration(rate)
 	return &RateLimitedWriter{
-		writer:  writer,
-		limiter: time.Tick(duration),
-		rate:    rate,
-		bytes:   0,
+		writer: writer,
+		// limiter: time.Tick(duration),
+		limiter: func() <-chan time.Time {
+			if duration <= 0 {
+				return nil
+			}
+			return time.NewTicker(duration).C
+		}(),
+		rate:  rate,
+		bytes: 0,
 	}
 }
 
