@@ -52,7 +52,7 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 
 	filename := filepath.Base(url)
 
-	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs , fileExtension)
+	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs, fileExtension)
 	file, err := os.Create(savePath)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
@@ -64,42 +64,3 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 
 	return nil
 }
-
-// // RateLimitedWriter wraps an existing writer and limits the write speed
-// type RateLimitedWriter struct {
-// 	writer     io.Writer
-// 	limiter    <-chan time.Time
-// 	rate       int64
-// 	bytes      int64
-// 	lastUpdate time.Time
-// }
-
-// // NewRateLimitedWriter creates a new RateLimitedWriter with the specified writer and rate limit
-// func NewRateLimitedWriter(writer io.Writer, rate int64) *RateLimitedWriter {
-// 	duration := time.Second / time.Duration(rate)
-// 	return &RateLimitedWriter{
-// 		writer:     writer,
-// 		limiter:    time.Tick(duration),
-// 		rate:       rate,
-// 		bytes:      0,
-// 		lastUpdate: time.Now(),
-// 	}
-// }
-
-// // Write writes data to the writer with rate limiting and throughput monitoring
-// func (w *RateLimitedWriter) Write(p []byte) (n int, err error) {
-// 	<-w.limiter
-// 	n, err = w.writer.Write(p)
-// 	if n > 0 {
-// 		w.bytes += int64(n)
-// 		currTime := time.Now()
-// 		elapsed := currTime.Sub(w.lastUpdate).Seconds()
-// 		if elapsed >= 1.0 {
-// 			throughput := float64(w.bytes) / elapsed
-// 			w.lastUpdate = currTime
-// 			w.bytes = 0
-// 			fmt.Printf("Throughput: %.2f bytes/s\n", throughput)
-// 		}
-// 	}
-// 	return
-// }

@@ -15,6 +15,10 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 	startTime := time.Now()
 
 	contentSize := response.ContentLength
+	rateLimit, err := parseRateLimit()
+	if err != nil {
+		return err
+	}
 
 	if *SilentMode {
 		fmt.Println("Logs will be written to Wget-light-log.txt")
@@ -33,19 +37,30 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 		log.Printf("start at %s", startTime.Format("2006-01-02 15:04:05"))
 		log.Printf("Sending request, awaiting response... %s", responseStatus(response))
 		log.Printf("Content size: %d [~%.2fMB]", contentSize, float64(contentSize)/(1024*1024))
-		log.Printf("Saving file to: %s", savePath)
+		log.Printf("Saving file to: %s\n\n", savePath)
 
-		// Use a custom reader to update the progress
+		// Use a custom reader with rate limiting if rateLimit is greater than 0
 		reader := &ProgressReader{Reader: response.Body, Progress: nil}
-		_, err = io.Copy(file, reader)
+		var finalWriter io.Writer
+		if rateLimit > 0 {
+			log.Printf("Rate limit: %d bytes/s", rateLimit)
+			finalWriter = NewRateLimitedWriter(file, rateLimit)
+		} else {
+			finalWriter = file
+		}
+
+		_, err = io.Copy(finalWriter, reader)
 		if err != nil {
 			return err
 		}
+
 		if *InputFile == "" {
 			// Log the download completion
 			log.Printf("Downloaded [%s]", url)
-			log.Print("Finished at ", time.Now().Format("2006-01-02 15:04:05"), "\n\n")
+			log.Print("Finished at ", time.Now().Format("2006-01-02 15:04:05"),
+			"\n<-------------------------------------------------------------------------------------------->\n")
 		}
+
 	} else {
 
 		fmt.Printf("start at %s\n", startTime.Format("2006-01-02 15:04:05"))
@@ -58,32 +73,37 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 			contentSize,
 			"[Downloading]...",
 		)
-		// Use a custom reader to update the progress
+
+		// Use a custom reader with rate limiting if rateLimit is greater than 0
 		reader := &ProgressReader{Reader: response.Body, Progress: progress}
-		_, err := io.Copy(io.MultiWriter(file, progress), reader)
+
+		// Determine the final writer based on rate limiting
+		var finalWriter io.Writer
+		if rateLimit > 0 {
+			// Create a RateLimitedWriter to limit the download speed
+			finalWriter = NewRateLimitedWriter(io.MultiWriter(file, progress), rateLimit)
+		} else {
+			// If rate limiting is not required, use the standard io.MultiWriter
+			finalWriter = io.MultiWriter(file, progress)
+		}
+
+		// Copy data from the reader to the final writer, applying rate limiting if needed
+		_, err := io.Copy(finalWriter, reader)
 		if err != nil {
 			return err
 		}
 
+		// Finish the progress bar once the download is complete
 		progress.Finish()
+
+		// If no input file is specified, log the download completion information
 		if *InputFile == "" {
 			// Log the download completion
 			fmt.Printf("\nDownloaded [%s]\n", url)
 			fmt.Printf("finished at %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
 		}
+
 	}
 
 	return nil
-}
-
-// ResponseStatus returns the formatted status message
-func responseStatus(response *http.Response) string {
-	switch response.StatusCode {
-	case http.StatusOK:
-		return "Status 200 OK."
-	case http.StatusForbidden:
-		return "Access denied. Status 403 Forbidden."
-	default:
-		return fmt.Sprintf("Unexpected status code: %d %s", response.StatusCode, http.StatusText(response.StatusCode))
-	}
 }
