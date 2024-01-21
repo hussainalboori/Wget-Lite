@@ -25,14 +25,18 @@ go run main.go  <url>
 #### Directory Structure:
 ```console
 ─ Wget/
+│
 ├── funcs/
-│   ├── download.go.go
+│   ├── download.go
 │   ├── fileName.go
-│   ├── FileReader.go
-│   ├── globs.go  
+│   ├── globs.go
+│   ├── MultiDownloads.go  
 │   ├── outPut.go
 │   └── ProgressBar.go
 |
+├── assetes/
+│   └── project-logos
+│
 ├── main.go
 ├── go.mod
 ├── README.md
