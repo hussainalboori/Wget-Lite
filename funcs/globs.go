@@ -10,10 +10,12 @@ import (
 var (
 	SaveAs     = pflag.StringP("O", "O", "", "save the downloaded file with a different name")
 	SaveDir    = pflag.StringP("P", "P", "", "directory to save the downloaded file")
-	RateLimit  = pflag.StringP("rate-limit", "R", "0", "limit the download speed in bytes per second")
+	RateLimit  = pflag.StringP("rate-limit", "L", "0", "limit the download speed in bytes per second")
 	InputFile  = pflag.StringP("i", "i", "", "specify a file with paths, and the program will download them async style :)")
 	SilentMode = pflag.BoolP("B", "B", false, "Enables Silent mode")
-	Mirror     = pflag.BoolP("mirror", "M", false, "Mirror a website's frontend by parsing html")
+	Mirror     = pflag.BoolP("mirror", "m", false, "Mirror a website's frontend by parsing html")
+	Reject     = pflag.StringP("reject", "R", "", "Reject specific file types (comma-separated, e.g., .jpg,.png)")
+	Exclude    = pflag.StringP("exclude", "X", "", "Exclude specific directories from mirroring (comma-separated)")
 )
 
 func parseRateLimit() (int64, error) {
