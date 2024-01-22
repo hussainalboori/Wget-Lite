@@ -2,16 +2,19 @@ package funcs
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
 )
 
-func DownloadFile(url string, wg *sync.WaitGroup) error {
+func DownloadFile(inputURL string, wg *sync.WaitGroup) error {
 	defer wg.Done()
+
 	// Make the HTTP request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", inputURL, nil)
 	if err != nil {
 		return err
 	}
@@ -48,19 +51,67 @@ func DownloadFile(url string, wg *sync.WaitGroup) error {
 
 	// Determine the file extension
 	contentType := response.Header.Get("Content-Type")
-	fileExtension := getFileExtension(contentType, url)
+	fileExtension := getFileExtension(contentType, inputURL)
 
-	filename := filepath.Base(url)
+	var filename string
+	var savePath string
 
-	savePath := getUniqueFileName(filename, *SaveDir, *SaveAs, fileExtension)
+	if *Mirror {
+		// Create the relative path for saving the file
+		relativePath := getRelativePath(inputURL)
+		savePath = filepath.Join(*SaveDir, relativePath)
+
+		// Create directories if they don't exist
+		if err := os.MkdirAll(filepath.Dir(savePath), 0755); err != nil {
+			return fmt.Errorf("error creating directories: %v", err)
+		}
+
+		// Check if the URL has an extension, indicating it's a file
+		if filepath.Ext(inputURL) == "" {
+			// fmt.Printf("Skipping directory: %s\n", inputURL)
+			// return nil
+			DownloadHtml(inputURL)
+		}
+
+	} else {
+		filename = filepath.Base(inputURL)
+		// filename = getUniqueFileName(filename, *SaveDir, *SaveAs, fileExtension)
+		savePath = getUniqueFileName(filename, *SaveDir, *SaveAs, fileExtension)
+	}
+
 	file, err := os.Create(savePath)
-	if err != nil {
+	if err != nil && !*Mirror {
 		fmt.Println("Error creating file:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
 
-	Output(response, file, savePath, url)
+	Output(response, file, savePath, inputURL)
 
 	return nil
+}
+
+func getRelativePath(inputURL string) string {
+	// Parse the base URL
+	base, err := url.Parse(BaseURL)
+	if err != nil {
+		log.Printf("Error parsing baseURL: %v", err)
+		return ""
+	}
+
+	// Parse the resource URL
+	resourceURL, err := url.Parse(inputURL)
+	if err != nil {
+		log.Printf("Error parsing resource URL: %v", err)
+		return ""
+	}
+
+	// Compute the relative path
+	relativePath, err := filepath.Rel(base.Path, resourceURL.Path)
+	if err != nil {
+		log.Printf("Error computing relative path: %v", err)
+		return ""
+	}
+
+	return relativePath
 }
