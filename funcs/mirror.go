@@ -43,7 +43,7 @@ func Mirroring(inputURL string, options MirrorOptions) error {
 	}
 
 	// Extract resources from HTML content
-	resources, err := ExtractResources(htmlContent, BaseURL)
+	resources, err := ExtractResources(htmlContent, BaseURL, options)
 	if err != nil && len(resources) == 0 {
 		return err
 	}
@@ -58,7 +58,7 @@ func Mirroring(inputURL string, options MirrorOptions) error {
 	// Download resources
 	for _, resourceURL := range resources {
 		// Download the resource only if it's not rejected and not in an excluded directory
-		if !rejectResource(resourceURL, options.RejectFileTypes) && !isExcludedDir(resourceURL, "", options.ExcludeDirs) {
+		if !rejectResource(resourceURL, options.RejectFileTypes) && !isExcludedDir(resourceURL, options.ExcludeDirs) {
 			// Increment the WaitGroup counter
 			// fmt.Println("URL:sssssssss")
 
@@ -87,7 +87,7 @@ func Mirroring(inputURL string, options MirrorOptions) error {
 }
 
 // isExcludedDir checks if the URL is in an excluded directory
-func isExcludedDir(url, currentDir string, ExcludeDirs []string) bool {
+func isExcludedDir(url string, ExcludeDirs []string) bool {
 	// Join the array elements into a single string
 	joinedFileTypes := strings.Join(ExcludeDirs, "")
 
@@ -97,7 +97,7 @@ func isExcludedDir(url, currentDir string, ExcludeDirs []string) bool {
 	}
 
 	for _, excludedDir := range ExcludeDirs {
-		if strings.HasPrefix(url, excludedDir) {
+		if strings.Contains(url, excludedDir) {
 			return true
 		}
 	}
@@ -142,7 +142,7 @@ func FetchHTML(inputURL string) (string, error) {
 	return string(htmlContent), nil
 }
 
-func ExtractResources(htmlContent, baseURL string) ([]string, error) {
+func ExtractResources(htmlContent, baseURL string, options MirrorOptions) ([]string, error) {
 	var resources []string
 
 	// Parse the base URL
@@ -174,14 +174,15 @@ func ExtractResources(htmlContent, baseURL string) ([]string, error) {
 
 						// Resolve the URL
 						absoluteURL := base.ResolveReference(resourceURLParsed).String()
+						if !rejectResource(resourceURL, options.RejectFileTypes) && !isExcludedDir(resourceURL, options.ExcludeDirs) {
 
-						// Check if the link is an HTML page and append ".html"
-						if strings.HasSuffix(resourceURLParsed.Path, ".html") {
-							absoluteURL += ".html"
+							// Check if the link is an HTML page and append ".html"
+							if strings.HasSuffix(resourceURLParsed.Path, ".html") {
+								absoluteURL += ".html"
+							}
+
+							resources = append(resources, absoluteURL)
 						}
-
-						resources = append(resources, absoluteURL)
-
 					}
 				}
 			} else if token.Data == "a" { // Check for anchor tags
