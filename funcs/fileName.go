@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mime"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -54,4 +55,15 @@ func getFileExtension(contentType, urlPath string) string {
 
 	// Default to no extension or determine based on other criteria
 	return ""
+}
+
+func ExpandTilde(path string) (string, error) {
+	if len(path) > 0 && path[0] == '~' {
+		usr, err := user.Current()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(usr.HomeDir, path[1:]), nil
+	}
+	return path, nil
 }

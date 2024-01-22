@@ -18,6 +18,9 @@ func main() {
 	// Retrieve non-flag arguments
 	args := pflag.Args()
 
+	//fixing the path
+	*funcs.SaveDir, _ = funcs.ExpandTilde(*funcs.SaveDir)
+
 	inputURL := ""
 
 	// Use a separate wait group for the goroutines
