@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 
@@ -145,7 +144,6 @@ func FetchHTML(inputURL string) (string, error) {
 
 func ExtractResources(htmlContent, baseURL string) ([]string, error) {
 	var resources []string
-	var resources1 []string
 
 	// Parse the base URL
 	base, err := url.Parse(baseURL)
@@ -204,12 +202,7 @@ func ExtractResources(htmlContent, baseURL string) ([]string, error) {
 						// Check if the link is an HTML page and append ".html"
 						if strings.HasSuffix(resourceURLParsed.Path, ".html") {
 							absoluteURL += ".html"
-							fmt.Println("HHH wwwwwww GGGoooooo")
-							os.Exit(0)
 						}
-
-						resources1 = append(resources1, absoluteURL)
-						// }
 					}
 				}
 			}
