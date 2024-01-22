@@ -11,7 +11,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func Output(response *http.Response, file *os.File, savePath, url string) error {
+func Output(response *http.Response, file *os.File, savePath, inputURL string) error {
 	startTime := time.Now()
 
 	contentSize := response.ContentLength
@@ -56,9 +56,9 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 
 		if *InputFile == "" {
 			// Log the download completion
-			log.Printf("Downloaded [%s]", url)
+			log.Printf("Downloaded [%s]", inputURL)
 			log.Print("Finished at ", time.Now().Format("2006-01-02 15:04:05"),
-			"\n<-------------------------------------------------------------------------------------------->\n")
+				"\n<-------------------------------------------------------------------------------------------->\n")
 		}
 
 	} else {
@@ -97,9 +97,9 @@ func Output(response *http.Response, file *os.File, savePath, url string) error 
 		progress.Finish()
 
 		// If no input file is specified, log the download completion information
-		if *InputFile == "" {
+		if *InputFile == "" && !*Mirror {
 			// Log the download completion
-			fmt.Printf("\nDownloaded [%s]\n", url)
+			fmt.Printf("\nDownloaded [%s]\n", inputURL)
 			fmt.Printf("finished at %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
 		}
 

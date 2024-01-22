@@ -3,7 +3,7 @@
 
 
 <p align="center">
-    <img src="./assets/Design3.png" alt="Wget-light Logo"  />
+    <img src="./assets/Design4.png" alt="Wget-light Logo"  />
 </p>
 
 <h2 align="center">About The Project</h2>
