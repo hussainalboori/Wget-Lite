@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -82,5 +83,5 @@ func main() {
 	// fmt.Println("flagRateLimit:", *funcs.RateLimit)
 	// fmt.Println("<-------------------------------->\n")
 	// wg.Wait()
-
+	os.Exit(0)
 }
