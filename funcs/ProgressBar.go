@@ -1,25 +1,27 @@
 package funcs
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/schollz/progressbar/v3"
+	"golang.org/x/time/rate"
 )
 
 // ProgressReader is a custom reader that updates progress
 type ProgressReader struct {
 	io.Reader
 	Progress *progressbar.ProgressBar
-	Limiter  <-chan time.Time
+	Limiter  *rate.Limiter
 }
 
 func (pr *ProgressReader) Read(p []byte) (n int, err error) {
 	// If Limiter is present, wait for the rate limit
 	if pr.Limiter != nil {
-		<-pr.Limiter
+		ctx := context.TODO()
+		_ = pr.Limiter.WaitN(ctx, len(p))
 	}
 
 	// Check if progress bar is not nil before updating progress
@@ -48,31 +50,25 @@ func responseStatus(response *http.Response) string {
 // RateLimitedWriter wraps an existing writer and limits the write speed
 type RateLimitedWriter struct {
 	writer  io.Writer
-	limiter <-chan time.Time
-	rate    int64
+	limiter *rate.Limiter
 	bytes   int64
 }
 
 // NewRateLimitedWriter creates a new RateLimitedWriter with the specified writer and rate limit
-func NewRateLimitedWriter(writer io.Writer, rate int64) *RateLimitedWriter {
-	duration := time.Second / time.Duration(rate)
+func NewRateLimitedWriter(writer io.Writer, rateLimit int64) *RateLimitedWriter {
 	return &RateLimitedWriter{
-		writer: writer,
-		// limiter: time.Tick(duration),
-		limiter: func() <-chan time.Time {
-			if duration <= 0 {
-				return nil
-			}
-			return time.NewTicker(duration).C
-		}(),
-		rate:  rate,
-		bytes: 0,
+		writer:  writer,
+		limiter: rate.NewLimiter(rate.Limit(rateLimit), int(rateLimit)),
+		bytes:   0,
 	}
 }
 
 // Write writes data to the writer with rate limiting
 func (w *RateLimitedWriter) Write(p []byte) (n int, err error) {
-	<-w.limiter
+	err = w.limiter.WaitN(context.TODO(), len(p))
+	if err != nil {
+		return 0, err
+	}
 	n, err = w.writer.Write(p)
 	w.bytes += int64(n)
 	return

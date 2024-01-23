@@ -28,28 +28,30 @@ func parseRateLimit() (int64, error) {
 
 	// Check if the rate limit string ends with 'k' or 'm'
 	if strings.HasSuffix(rateLimitStr, "k") {
-		// If 'k', convert to kilobytes
+		// If 'k', convert to kilobytes per second
 		value, err := strconv.ParseInt(strings.TrimSuffix(rateLimitStr, "k"), 10, 64)
 		if err != nil {
 			return 0, err
 		}
-		return value * 1024, nil
+		return (value * 1000) / 2, nil
 	} else if strings.HasSuffix(rateLimitStr, "m") {
-		// If 'm', convert to megabytes
+		// If 'm', convert to megabytes per second
 		value, err := strconv.ParseInt(strings.TrimSuffix(rateLimitStr, "m"), 10, 64)
 		if err != nil {
 			return 0, err
 		}
-		return value * 1024 * 1024, nil
+		return (value * 1000 * 1000) / 2, nil
 	} else if strings.HasSuffix(rateLimitStr, "g") {
-		// If 'g', convert to gigabytes
+		// If 'g', convert to gigabytes per second
 		value, err := strconv.ParseInt(strings.TrimSuffix(rateLimitStr, "g"), 10, 64)
 		if err != nil {
 			return 0, err
 		}
-		return value * 1024 * 1024 * 1024, nil
+		return (value * 1000 * 1000 * 1000) / 2, nil
 	}
 
-	// If no 'k', 'm', or 'g', assume value is in bytes
-	return strconv.ParseInt(rateLimitStr, 10, 64)
+	// If no 'k', 'm', or 'g', assume value is in bytes per second
+	value, err := strconv.ParseInt(rateLimitStr, 10, 64)
+
+	return value / 2, err
 }

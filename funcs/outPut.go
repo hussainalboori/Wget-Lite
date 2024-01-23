@@ -9,15 +9,21 @@ import (
 	"time"
 
 	"github.com/schollz/progressbar/v3"
+	"golang.org/x/time/rate"
 )
 
 func Output(response *http.Response, file *os.File, savePath, inputURL string) error {
 	startTime := time.Now()
 
 	contentSize := response.ContentLength
+
 	rateLimit, err := parseRateLimit()
 	if err != nil {
 		return err
+	}
+	var limiter *rate.Limiter
+	if rateLimit > 0 {
+		limiter = rate.NewLimiter(rate.Limit(rateLimit), int(rateLimit))
 	}
 
 	if *SilentMode {
@@ -40,12 +46,21 @@ func Output(response *http.Response, file *os.File, savePath, inputURL string) e
 		log.Printf("Saving file to: %s\n\n", savePath)
 
 		// Use a custom reader with rate limiting if rateLimit is greater than 0
-		reader := &ProgressReader{Reader: response.Body, Progress: nil}
+		// reader := &ProgressReader{Reader: response.Body, Progress: nil}
+
+		// Use a custom reader with rate limiting if rateLimit is greater than 0
+		reader := &ProgressReader{
+			Reader:   response.Body,
+			Progress: nil,
+			Limiter:  limiter,
+		}
+
 		var finalWriter io.Writer
 		if rateLimit > 0 {
 			log.Printf("Rate limit: %d bytes/s", rateLimit)
 			finalWriter = NewRateLimitedWriter(file, rateLimit)
-		} else {
+		} else { // reader := &ProgressReader{Reader: response.Body, Progress: progress}
+
 			finalWriter = file
 		}
 
@@ -75,7 +90,15 @@ func Output(response *http.Response, file *os.File, savePath, inputURL string) e
 		)
 
 		// Use a custom reader with rate limiting if rateLimit is greater than 0
-		reader := &ProgressReader{Reader: response.Body, Progress: progress}
+		// reader := &ProgressReader{Reader: response.Body, Progress: progress}
+
+		// Use a custom reader with rate limiting if rateLimit is greater than 0
+
+		reader := &ProgressReader{
+			Reader:   response.Body,
+			Progress: progress,
+			Limiter:  limiter,
+		}
 
 		// Determine the final writer based on rate limiting
 		var finalWriter io.Writer
