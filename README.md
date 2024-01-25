@@ -114,7 +114,7 @@ go run main.go --mirror https://example.com
   ```
 
 ## Authors
-- amali (Amjad Ali)
-- husalboori
-- aalsendi
-- hnabeel
+- [Amjad Ali](https://github.com/amali01)
+- [Hussain Alboori](https://github.com/hussainalboori)
+- Ali Alsendi
+- [Hussain Nabeel](https://github.com/7ussainnabeel)
